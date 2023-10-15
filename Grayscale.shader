@@ -6,6 +6,7 @@ Shader "Sprites/Grayscale" {
 	Properties {
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
+		_Intensity("Intensity", Range(0, 1)) = 0.5
 		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 		[HideInInspector] _RendererColor("RendererColor", Color) = (1,1,1,1)
 		[HideInInspector] _Flip("Flip", Vector) = (1,1,1,1)
@@ -38,9 +39,13 @@ Shader "Sprites/Grayscale" {
 				#include "UnitySprites.cginc"
 				#define GRAY_WEIGHTS float3(0.299, 0.587, 0.114)
 
+				float _Intensity;
+
 				fixed4 SpriteGrayScale(v2f IN) : SV_Target {
 					fixed4 col = SampleSpriteTexture(IN.texcoord) * IN.color;
-					float gray = dot(col.rgb, GRAY_WEIGHTS) * col.a;
+					float gray = dot(col.rgb, GRAY_WEIGHTS);
+					gray = gray * (1 - _Intensity) + _Intensity;
+					gray *= col.a;
 					return float4(gray, gray, gray, col.a);
 				}
 			ENDCG
