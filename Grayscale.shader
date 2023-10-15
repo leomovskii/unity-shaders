@@ -1,4 +1,4 @@
-﻿// Unity built-in shader source. Copyright (c) 2016 Unity Technologies.
+﻿// Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license
 // Modified by leomovskii
 
 Shader "Sprites/Grayscale" {
