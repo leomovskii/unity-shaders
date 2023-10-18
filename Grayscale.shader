@@ -1,11 +1,12 @@
-﻿// Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license
+// Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license
 // Modified by leomovskii
 
 Shader "Sprites/Grayscale" {
 
-	Properties {
+	Properties{
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
+		[MaterialToggle] _Grayscale("Grayscale", Float) = 0
 		_Intensity("Intensity", Range(0, 1)) = 0.5
 		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 		[HideInInspector] _RendererColor("RendererColor", Color) = (1,1,1,1)
@@ -31,7 +32,7 @@ Shader "Sprites/Grayscale" {
 		Pass {
 			CGPROGRAM
 				#pragma vertex SpriteVert
-				#pragma fragment SpriteGrayScale
+				#pragma fragment SpriteRender
 				#pragma target 2.0
 				#pragma multi_compile_instancing
 				#pragma multi_compile_local _ PIXELSNAP_ON
@@ -40,13 +41,21 @@ Shader "Sprites/Grayscale" {
 				#define GRAY_WEIGHTS float3(0.299, 0.587, 0.114)
 
 				float _Intensity;
+				float _Grayscale;
 
-				fixed4 SpriteGrayScale(v2f IN) : SV_Target {
-					fixed4 col = SampleSpriteTexture(IN.texcoord) * IN.color;
-					float gray = dot(col.rgb, GRAY_WEIGHTS);
-					gray = gray * (1 - _Intensity) + _Intensity;
-					gray *= col.a;
-					return float4(gray, gray, gray, col.a);
+				fixed4 SpriteRender(v2f IN) : SV_Target {
+					fixed4 color = SampleSpriteTexture(IN.texcoord) * IN.color;
+					if (_Grayscale == 1) {
+						float gray = dot(color.rgb, GRAY_WEIGHTS);
+						gray = gray * (1 - _Intensity) + _Intensity;
+						return float4(gray, gray, gray, 1) * color.a;
+
+					} else {
+						float r = color.r * (1 - _Intensity) + _Intensity;
+						float g = color.g * (1 - _Intensity) + _Intensity;
+						float b = color.b * (1 - _Intensity) + _Intensity;
+						return float4(r, g, b, 1) * color.a;
+					}
 				}
 			ENDCG
 		}
