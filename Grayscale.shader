@@ -6,8 +6,8 @@ Shader "Sprites/Grayscale" {
 	Properties{
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
-		[MaterialToggle] _Grayscale("Grayscale", Float) = 0
-		_Intensity("Intensity", Range(0, 1)) = 0.5
+		_Intensity("Intensity", Range(0, 1)) = 0
+		[KeywordEnum(None, Grayscale, Sepia)] _Effect("Effect", Float) = 0
 		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 		[HideInInspector] _RendererColor("RendererColor", Color) = (1,1,1,1)
 		[HideInInspector] _Flip("Flip", Vector) = (1,1,1,1)
@@ -15,7 +15,7 @@ Shader "Sprites/Grayscale" {
 		[PerRendererData] _EnableExternalAlpha("Enable External Alpha", Float) = 0
 	}
 
-	SubShader {
+	SubShader{
 		Tags {
 			"Queue" = "Transparent"
 			"IgnoreProjector" = "True"
@@ -39,13 +39,19 @@ Shader "Sprites/Grayscale" {
 				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				#include "UnitySprites.cginc"
 				#define GRAY_WEIGHTS float3(0.299, 0.587, 0.114)
+				#define SEPIA_WEIGHTS float3(1, 0.95, 0.82)
 
 				float _Intensity;
-				float _Grayscale;
+				float _Effect;
 
 				fixed4 SpriteRender(v2f IN) : SV_Target {
 					fixed4 color = SampleSpriteTexture(IN.texcoord) * IN.color;
-					if (_Grayscale == 1) {
+					if (_Effect > 1) {
+						float gray = dot(color.rgb, GRAY_WEIGHTS);
+						float3 sepia = lerp(gray * SEPIA_WEIGHTS, color.rgb, _Intensity);
+						return float4(sepia, 1) * color.a;
+
+					} else if (_Effect > 0) {
 						float gray = dot(color.rgb, GRAY_WEIGHTS);
 						gray = gray * (1 - _Intensity) + _Intensity;
 						return float4(gray, gray, gray, 1) * color.a;
